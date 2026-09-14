@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "CLP",
+    "slug": "clp-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#f8fafc"
+    },
+    "android": {
+      "package": "com.clp.app",
+      "usesCleartextTraffic": true
+    },
+    "ios": {
+      "bundleIdentifier": "com.clp.app"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "84ccf8d6-fc70-4070-9ef9-949ba73fea26"
+      }
+    }
+  }
+}
