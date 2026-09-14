@@ -1,187 +1,155 @@
 import React, { useEffect, useState } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Pressable, Text } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { StatusBar } from 'expo-status-bar';
 
-import HomeScreen from './src/screens/HomeScreen';
-import LoginScreen from './src/screens/LoginScreen';
-import RegisterScreen from './src/screens/RegisterScreen';
-import FindDoctorsScreen from './src/screens/FindDoctorsScreen';
-import DoctorProfileScreen from './src/screens/DoctorProfileScreen';
-import MyAppointmentsScreen from './src/screens/MyAppointmentsScreen';
-import DoctorDashboardScreen from './src/screens/DoctorDashboardScreen';
-import AdminDashboardScreen from './src/screens/AdminDashboardScreen';
-import ProfileScreen from './src/screens/ProfileScreen';
+import { api } from '../api';
+import { Button, Loading, SectionHeader } from '../components';
+import DoctorCard from './DoctorCard';
 
-const Stack = createNativeStackNavigator();
-
-export default function App() {
-  const [ready, setReady] = useState(false);
+export default function HomeScreen({ navigation }) {
+  const [doctors, setDoctors] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
 
-  // Load logged-in user when app starts
   useEffect(() => {
-    loadUser();
+    Promise.all([
+      api.doctors
+        .list()
+        .then(setDoctors)
+        .catch(() => setDoctors([])),
+
+      AsyncStorage.getItem('user').then((raw) =>
+        setUser(raw ? JSON.parse(raw) : null)
+      ),
+    ]).finally(() => setLoading(false));
   }, []);
 
-  const loadUser = async () => {
-    try {
-      const raw = await AsyncStorage.getItem('user');
-
-      if (raw) {
-        setUser(JSON.parse(raw));
-      } else {
-        setUser(null);
-      }
-    } catch (error) {
-      console.log('Failed to load user:', error);
-      setUser(null);
-    } finally {
-      setReady(true);
+  const openAppointments = () => {
+    if (!user) {
+      navigation.navigate('Login', {
+        from: 'MyAppointments',
+      });
+    } else {
+      navigation.navigate('MyAppointments');
     }
   };
 
-  if (!ready) {
-    return null;
-  }
-
   return (
-    <NavigationContainer
-      onStateChange={() => {
-        // Refresh user after login/logout/navigation changes
-        loadUser();
+    <ScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={{
+        paddingBottom: 40,
       }}
     >
-      <StatusBar style="dark" />
-
-      <Stack.Navigator
-        screenOptions={({ navigation, route }) => ({
-          headerTintColor: '#0f172a',
-
-          headerTitleStyle: {
-            fontWeight: '800',
-          },
-
-          headerShadowVisible: false,
-
-          headerStyle: {
-            backgroundColor: '#ffffff',
-          },
-
-          contentStyle: {
-            backgroundColor: '#f8fafc',
-          },
-
-          // Show profile icon for logged-in users
-          headerRight:
-            user &&
-              !['Login', 'Register', 'Profile'].includes(route.name)
-              ? () => (
-                <Pressable
-                  onPress={() => navigation.navigate('Profile')}
-                  style={({ pressed }) => ({
-                    width: 40,
-                    height: 40,
-                    borderRadius: 20,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: '#f1f5f9',
-                    opacity: pressed ? 0.6 : 1,
-                  })}
-                >
-                  <Text
-                    style={{
-                      fontSize: 21,
-                    }}
-                  >
-                    👤
-                  </Text>
-                </Pressable>
-              )
-              : undefined,
-        })}
+      <View
+        style={{
+          padding: 20,
+          paddingTop: 30,
+        }}
       >
-        {/* Home */}
-        <Stack.Screen
-          name="Home"
-          component={HomeScreen}
-          options={{
-            title: 'CLP',
+        {/* Hero Section */}
+        <View
+          style={{
+            backgroundColor: '#eff6ff',
+            borderRadius: 22,
+            padding: 24,
           }}
-        />
+        >
+          <Text
+            style={{
+              color: '#1d4ed8',
+              fontWeight: '800',
+              fontSize: 12,
+            }}
+          >
+            TRUSTED BY PATIENTS
+          </Text>
 
-        {/* Profile */}
-        <Stack.Screen
-          name="Profile"
-          component={ProfileScreen}
-          options={{
-            title: 'My Profile',
-          }}
-        />
+          <Text
+            style={{
+              color: '#0f172a',
+              fontWeight: '900',
+              fontSize: 32,
+              lineHeight: 38,
+              marginTop: 10,
+            }}
+          >
+            Book your appointment, in under a minute
+          </Text>
 
-        {/* Doctors */}
-        <Stack.Screen
-          name="FindDoctors"
-          component={FindDoctorsScreen}
-          options={{
-            title: 'Find Doctors',
-          }}
-        />
+          <Text
+            style={{
+              color: '#64748b',
+              fontSize: 15,
+              lineHeight: 22,
+              marginTop: 12,
+            }}
+          >
+            Find the right doctor, pick a time that works for you,
+            and confirm instantly.
+          </Text>
 
-        <Stack.Screen
-          name="DoctorProfile"
-          component={DoctorProfileScreen}
-          options={{
-            title: 'Doctor Profile',
-          }}
-        />
+          <View style={{ marginTop: 20 }}>
+            {/* Find Doctor */}
+            <Button
+              title="Find a Doctor"
+              onPress={() =>
+                navigation.navigate('FindDoctors')
+              }
+            />
 
-        {/* Appointments */}
-        <Stack.Screen
-          name="MyAppointments"
-          component={MyAppointmentsScreen}
-          options={{
-            title: 'My Appointments',
-          }}
-        />
+            {/* My Appointments */}
+            <Button
+              title="View My Appointments"
+              variant="outline"
+              onPress={openAppointments}
+              style={{ marginTop: 10 }}
+            />
+          </View>
+        </View>
 
-        {/* Authentication */}
-        <Stack.Screen
-          name="Login"
-          component={LoginScreen}
-          options={{
-            title: 'Log In',
-          }}
-        />
+        {/* Popular Doctors */}
+        <View style={{ marginTop: 30 }}>
+          <SectionHeader
+            title="Popular Doctors"
+            right={
+              <Text
+                onPress={() =>
+                  navigation.navigate('FindDoctors')
+                }
+                style={{
+                  color: '#2563eb',
+                  fontWeight: '700',
+                }}
+              >
+                See all →
+              </Text>
+            }
+          />
 
-        <Stack.Screen
-          name="Register"
-          component={RegisterScreen}
-          options={{
-            title: 'Create Account',
-          }}
-        />
-
-        {/* Doctor */}
-        <Stack.Screen
-          name="DoctorDashboard"
-          component={DoctorDashboardScreen}
-          options={{
-            title: 'Doctor Dashboard',
-          }}
-        />
-
-        {/* Admin */}
-        <Stack.Screen
-          name="AdminDashboard"
-          component={AdminDashboardScreen}
-          options={{
-            title: 'Admin Dashboard',
-          }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+          {loading ? (
+            <Loading text="Loading doctors..." />
+          ) : doctors.length ? (
+            doctors
+              .slice(0, 3)
+              .map((doctor) => (
+                <DoctorCard
+                  key={doctor.id || doctor._id}
+                  doctor={doctor}
+                  navigation={navigation}
+                />
+              ))
+          ) : (
+            <Text
+              style={{
+                color: '#64748b',
+              }}
+            >
+              No doctors available.
+            </Text>
+          )}
+        </View>
+      </View>
+    </ScrollView>
   );
 }

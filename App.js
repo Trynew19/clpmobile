@@ -28,22 +28,41 @@ export default function App() {
   const [ready, setReady] = useState(false);
   const [user, setUser] = useState(null);
 
+  // Load the logged-in user from AsyncStorage
+  const loadUser = async () => {
+    try {
+      const raw = await AsyncStorage.getItem('user');
+
+      if (raw) {
+        setUser(JSON.parse(raw));
+      } else {
+        setUser(null);
+      }
+    } catch (error) {
+      console.log('Failed to load user:', error);
+      setUser(null);
+    } finally {
+      setReady(true);
+    }
+  };
+
+  // Load user when app starts
   useEffect(() => {
-    AsyncStorage.getItem('user')
-      .then((raw) => {
-        setUser(raw ? JSON.parse(raw) : null);
-      })
-      .finally(() => {
-        setReady(true);
-      });
+    loadUser();
   }, []);
 
+  // Wait until AsyncStorage has been checked
   if (!ready) {
     return null;
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer
+      onStateChange={() => {
+        // Refresh user after login/logout/navigation changes
+        loadUser();
+      }}
+    >
       <StatusBar style="dark" />
 
       <Stack.Navigator
@@ -64,15 +83,13 @@ export default function App() {
             backgroundColor: '#f8fafc',
           },
 
-          // Profile icon for logged-in users
+          // Show Profile icon for logged-in users
           headerRight:
             user &&
               !['Login', 'Register', 'Profile'].includes(route.name)
               ? () => (
                 <Pressable
-                  onPress={() =>
-                    navigation.navigate('Profile')
-                  }
+                  onPress={() => navigation.navigate('Profile')}
                   style={({ pressed }) => ({
                     width: 40,
                     height: 40,
@@ -96,7 +113,8 @@ export default function App() {
         })}
       >
 
-        {/* Patient Home */}
+        {/* ==================== HOME ==================== */}
+
         <Stack.Screen
           name="Home"
           component={HomeScreen}
@@ -105,7 +123,8 @@ export default function App() {
           }}
         />
 
-        {/* Profile */}
+        {/* ==================== PROFILE ==================== */}
+
         <Stack.Screen
           name="Profile"
           component={ProfileScreen}
@@ -114,7 +133,8 @@ export default function App() {
           }}
         />
 
-        {/* Doctors */}
+        {/* ==================== DOCTORS ==================== */}
+
         <Stack.Screen
           name="FindDoctors"
           component={FindDoctorsScreen}
@@ -131,7 +151,8 @@ export default function App() {
           }}
         />
 
-        {/* Appointments */}
+        {/* ==================== APPOINTMENTS ==================== */}
+
         <Stack.Screen
           name="MyAppointments"
           component={MyAppointmentsScreen}
@@ -140,7 +161,8 @@ export default function App() {
           }}
         />
 
-        {/* Authentication */}
+        {/* ==================== AUTHENTICATION ==================== */}
+
         <Stack.Screen
           name="Login"
           component={LoginScreen}
@@ -157,7 +179,8 @@ export default function App() {
           }}
         />
 
-        {/* Doctor */}
+        {/* ==================== DOCTOR ==================== */}
+
         <Stack.Screen
           name="DoctorDashboard"
           component={DoctorDashboardScreen}
@@ -166,7 +189,8 @@ export default function App() {
           }}
         />
 
-        {/* Admin */}
+        {/* ==================== ADMIN ==================== */}
+
         <Stack.Screen
           name="AdminDashboard"
           component={AdminDashboardScreen}
