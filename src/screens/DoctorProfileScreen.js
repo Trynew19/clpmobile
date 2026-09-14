@@ -55,11 +55,44 @@ export default function DoctorProfileScreen({ navigation, route }) {
     return e;
   };
 
-  const continueBooking = () => {
-    const e = validateDateTime();
-    if (e.length) return setErrors(e);
-    setErrors([]);
-    setStep('details');
+  const continueBooking = async () => {
+    try {
+      // Check whether user is logged in
+      const token = await AsyncStorage.getItem('token');
+      const rawUser = await AsyncStorage.getItem('user');
+
+      if (!token || !rawUser) {
+        navigation.navigate('Login', {
+          from: 'DoctorProfile',
+          doctorId: id,
+        });
+        return;
+      }
+
+      const e = validateDateTime();
+
+      if (e.length) {
+        setErrors(e);
+        return;
+      }
+
+      setErrors([]);
+
+      // Load user details again
+      const user = JSON.parse(rawUser);
+
+      setPatientName(user.name || '');
+      setMobile(user.mobile_number || '');
+
+      setStep('details');
+    } catch (error) {
+      console.log('Login check failed:', error);
+
+      navigation.navigate('Login', {
+        from: 'DoctorProfile',
+        doctorId: id,
+      });
+    }
   };
 
   const confirmBooking = async () => {

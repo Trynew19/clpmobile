@@ -7,6 +7,7 @@ import {
   View,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import { auth } from '../api';
 import { Button, ErrorBox, Field } from '../components';
 import { C, S } from '../styles';
@@ -33,15 +34,23 @@ export default function LoginScreen({ navigation, route }) {
         ['user', JSON.stringify(data.user)],
       ]);
 
-      // If user was redirected here from My Appointments
+      // ==========================================
+      // REDIRECT AFTER LOGIN
+      // ==========================================
+
+      // User came from My Appointments
       if (route.params?.from === 'MyAppointments') {
         navigation.replace('MyAppointments');
 
-        // If user was redirected here from Doctor Profile
+        // User came from Doctor Profile
       } else if (route.params?.from === 'DoctorProfile') {
         navigation.replace('DoctorProfile', {
           id: route.params.doctorId,
         });
+
+        // User came from Find Doctors
+      } else if (route.params?.from === 'FindDoctors') {
+        navigation.replace('FindDoctors');
 
         // Admin login
       } else if (data.user.role === 'Admin') {
@@ -67,6 +76,7 @@ export default function LoginScreen({ navigation, route }) {
       } else {
         navigation.replace('Home');
       }
+
     } catch (err) {
       setErrors(
         err.errors || ['Login failed.']
@@ -94,6 +104,7 @@ export default function LoginScreen({ navigation, route }) {
         keyboardShouldPersistTaps="handled"
       >
         <View style={S.card}>
+
           {/* Title */}
           <Text style={S.title}>
             Welcome back
@@ -104,6 +115,7 @@ export default function LoginScreen({ navigation, route }) {
           </Text>
 
           <View style={{ marginTop: 24 }}>
+
             {/* Email */}
             <Field
               label="Email"
@@ -140,6 +152,7 @@ export default function LoginScreen({ navigation, route }) {
                 !password
               }
             />
+
           </View>
 
           {/* Register */}
@@ -164,6 +177,7 @@ export default function LoginScreen({ navigation, route }) {
               Register
             </Text>
           </Text>
+
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
